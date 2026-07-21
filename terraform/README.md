@@ -77,3 +77,4 @@ in the final report as an observed deviation, not fixed silently here.
 ├── import.sh           # bring existing resources under management
 └── README.md
 ```
+| `enable_access_logging` | false | Enable access logging on the legacy bucket (MC-09) |
