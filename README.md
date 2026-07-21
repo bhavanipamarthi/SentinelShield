@@ -23,7 +23,7 @@ Powered Cybersecurity (Cohort 1).
    functions; higher-risk findings are routed to a human-approval queue
    with full context logged to CloudWatch.
 
-**8 misconfigurations** are tracked end-to-end through this pipeline (see `submission/02-misconfiguration-catalogue.md`), spanning S3, IAM, network, RDS, and CloudTrail.
+**9 misconfigurations** are tracked end-to-end through this pipeline (see `submission/02-misconfiguration-catalogue.md`), spanning S3, IAM, network, RDS, and CloudTrail.
 
 ## Repo structure
 
