@@ -163,7 +163,7 @@ conn.close()
     (7, 'high', 'MC-10', 252.0, 'RDS instance storage is not encrypted at rest')
     (8, 'high', 'MC-01', 245.0, 'S3 bucket without default encryption')
     (9, 'medium', 'MC-09', 168.0, 'S3 bucket does not have access logging enabled')
-    (10, 'medium', '', 144.0, 'Root account does not have hardware MFA enabled')
+    (10, 'medium', 'MC-08', 144.0, 'Root account does not have hardware MFA enabled'))
 
 
 ## 6. Next step: remediation
