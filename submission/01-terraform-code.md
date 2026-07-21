@@ -1,6 +1,6 @@
 # SentinelShield — Terraform code (AWS workload)
 
-Infrastructure-as-code for the CloudGuardian AWS workload underlying SentinelShield. Codifies all 8 tracked misconfigurations with a vulnerable/remediated toggle (`var.enable_misconfigurations`). Full runnable code also lives in `terraform/` in the GitHub repo.
+Infrastructure-as-code for the CloudGuardian AWS workload underlying SentinelShield. Codifies all 10 tracked misconfigurations with a vulnerable/remediated toggle (`var.enable_misconfigurations`), plus an independent toggle (`var.enable_access_logging`) for MC-09, which is reserved for the live demo. Full runnable code also lives in `terraform/` in the GitHub repo.
 
 ## `versions.tf`
 
@@ -71,6 +71,12 @@ variable "enable_misconfigurations" {
   description = "Master switch. true = deploy the intentionally vulnerable baseline for the CSPM demo. false = deploy the hardened/remediated equivalent."
   type        = bool
   default     = true
+}
+
+variable "enable_access_logging" {
+  description = "MC-09 toggle, kept independent of enable_misconfigurations. Defaults to false (vulnerable) so this one finding can be flipped live during the demo recording without touching the other 9."
+  type        = bool
+  default     = false
 }
 
 ```
@@ -263,6 +269,56 @@ resource "aws_s3_bucket_policy" "cloudtrail" {
 
 ```
 
+## `s3-logging.tf`
+
+```hcl
+# --- MC-09: S3 bucket missing access logging -------------------------------
+#
+# Deliberately kept on its OWN toggle (var.enable_access_logging), separate
+# from var.enable_misconfigurations. This is the finding reserved for the
+# live demo recording: flip it from false -> true on camera and show
+# Prowler / the Lambda catching the fix in real time, without touching any
+# of the other 9 findings' state.
+
+resource "aws_s3_bucket" "access_logs" {
+  bucket = "cloudguardian-access-logs-${var.aws_account_id}"
+  tags   = { Project = "CloudGuardian" }
+}
+
+resource "aws_s3_bucket_public_access_block" "access_logs" {
+  bucket                  = aws_s3_bucket.access_logs.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# S3 requires the log delivery group to have write access to the target
+# bucket via ACL (log-delivery-write), separate from the block-public-access
+# settings above which only govern the *source* bucket being read publicly.
+resource "aws_s3_bucket_ownership_controls" "access_logs" {
+  bucket = aws_s3_bucket.access_logs.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
+resource "aws_s3_bucket_acl" "access_logs" {
+  depends_on = [aws_s3_bucket_ownership_controls.access_logs]
+  bucket     = aws_s3_bucket.access_logs.id
+  acl        = "log-delivery-write"
+}
+
+resource "aws_s3_bucket_logging" "data" {
+  count = var.enable_access_logging ? 1 : 0
+
+  bucket        = aws_s3_bucket.data.id
+  target_bucket = aws_s3_bucket.access_logs.id
+  target_prefix = "cloudguardian-data-access-logs/"
+}
+
+```
+
 ## `iam.tf`
 
 ```hcl
@@ -365,7 +421,14 @@ resource "aws_db_instance" "cloudguardian" {
   instance_class = var.db_instance_class
 
   allocated_storage = 20
-  storage_encrypted = true
+
+  # MC-10: unencrypted storage. Note this is NOT a simple in-place flip in
+  # real AWS — encrypting an existing unencrypted RDS instance requires a
+  # snapshot -> encrypted-copy -> restore cycle, which creates a new
+  # instance and needs a maintenance window. Classified human_approval in
+  # the catalogue for that reason, even though this toggle models both
+  # states declaratively for demo/report purposes.
+  storage_encrypted = var.enable_misconfigurations ? false : true
 
   db_name  = "cloudguardian"
   username = var.db_username
@@ -381,7 +444,7 @@ resource "aws_db_instance" "cloudguardian" {
   skip_final_snapshot = true
   apply_immediately   = true
 
-  tags = { Project = "CloudGuardian", Finding = "MC-06" }
+  tags = { Project = "CloudGuardian", Finding = "MC-06,MC-10" }
 }
 
 ```

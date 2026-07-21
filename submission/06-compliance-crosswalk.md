@@ -34,15 +34,19 @@ crore for failing the Section 8(6) breach-notification duty.
 | MC-06 — Public RDS instance | A.8.20 Networks security | S.8(5) + Rule 6(2) — access control | A publicly reachable database is a materially higher-risk version of MC-04 if the DB holds personal data | Human approval | Pending |
 | MC-07 — CloudTrail disabled | A.8.15 Logging | Rule 6(3) — logs for detection/investigation | Rule 6 requires log retention specifically so unauthorized access can be detected and investigated; disabled logging removes that capability entirely, which also undermines the Section 8(6) breach-notification duty (you can't notify what you can't detect) | Human approval | Pending |
 | MC-08 — Versioning suspended | A.8.13 Information backup | Rule 6(4) — backup/continuity | Rule 6 requires backup and continuity measures for personal data; suspended versioning removes the recovery path for accidental or malicious overwrite/deletion | Auto | Remediated |
+| MC-09 — Missing S3 access logging | A.8.15 Logging | Rule 6(3) — logs for detection/investigation | Same rationale as MC-07: without access logs on the bucket itself, unauthorized reads/writes to personal data go undetected | Auto | Pending (reserved for live demo) |
+| MC-10 — RDS storage not encrypted at rest | A.8.24 Use of cryptography | Rule 6(1) — encryption | Unencrypted storage fails the baseline encryption safeguard for any personal data held in the database | Human approval | Remediated |
 
 ## Summary
 
-- **3 of 8** findings auto-remediated (MC-01, MC-04, MC-08) — additive,
-  reversible changes with no availability impact.
-- **5 of 8** findings routed to human approval (MC-02, MC-03, MC-05, MC-06,
-  MC-07) — each touches access control, network exposure, or has
-  cost/availability trade-offs warranting sign-off before changing.
-- Every one of the 8 maps to at least one DPDP Rule 6 safeguard category
+- **4 of 10** findings auto-remediated (MC-01, MC-04, MC-08, MC-09) —
+  additive, reversible changes with no availability impact. MC-09 is
+  reserved for the live demo recording rather than pre-remediated.
+- **6 of 10** findings routed to human approval (MC-02, MC-03, MC-05,
+  MC-06, MC-07, MC-10) — each touches access control, network exposure,
+  or has a genuine operational constraint (MC-10 requires a
+  snapshot/restore cycle in real AWS) warranting sign-off before changing.
+- Every one of the 10 maps to at least one DPDP Rule 6 safeguard category
   (encryption, access control, logging, or backup), which is the
   practical checklist the Rules give for the Section 8(5) obligation.
 - MC-07 (disabled logging) is worth flagging specifically in the report:

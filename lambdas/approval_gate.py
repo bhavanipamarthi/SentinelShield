@@ -30,7 +30,7 @@ sns = boto3.client("sns")
 
 APPROVAL_TOPIC_ARN = "arn:aws:sns:us-east-1:633867805885:cloudguardian-approval-queue"
 
-HIGH_RISK_MISCONFIGS = {"MC-02", "MC-03", "MC-05", "MC-06", "MC-07"}
+HIGH_RISK_MISCONFIGS = {"MC-02", "MC-03", "MC-05", "MC-06", "MC-07", "MC-10"}
 
 
 def lambda_handler(event, context):

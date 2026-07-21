@@ -45,3 +45,9 @@ variable "enable_misconfigurations" {
   type        = bool
   default     = true
 }
+
+variable "enable_access_logging" {
+  description = "MC-09 toggle, kept independent of enable_misconfigurations. Defaults to false (vulnerable) so this one finding can be flipped live during the demo recording without touching the other 9."
+  type        = bool
+  default     = false
+}

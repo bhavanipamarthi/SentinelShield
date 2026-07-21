@@ -12,7 +12,14 @@ resource "aws_db_instance" "cloudguardian" {
   instance_class = var.db_instance_class
 
   allocated_storage = 20
-  storage_encrypted = true
+
+  # MC-10: unencrypted storage. Note this is NOT a simple in-place flip in
+  # real AWS — encrypting an existing unencrypted RDS instance requires a
+  # snapshot -> encrypted-copy -> restore cycle, which creates a new
+  # instance and needs a maintenance window. Classified human_approval in
+  # the catalogue for that reason, even though this toggle models both
+  # states declaratively for demo/report purposes.
+  storage_encrypted = var.enable_misconfigurations ? false : true
 
   db_name  = "cloudguardian"
   username = var.db_username
@@ -28,5 +35,5 @@ resource "aws_db_instance" "cloudguardian" {
   skip_final_snapshot = true
   apply_immediately   = true
 
-  tags = { Project = "CloudGuardian", Finding = "MC-06" }
+  tags = { Project = "CloudGuardian", Finding = "MC-06,MC-10" }
 }

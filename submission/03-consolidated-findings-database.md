@@ -52,11 +52,13 @@ CREATE INDEX IF NOT EXISTS idx_findings_status ON findings(status);
 | 4 | critical | MC-05 | 700 | `ec2_securitygroup_allow_ingress_from_internet_to_port_22` | Security group allows SSH from 0.0.0.0/0 |
 | 5 | high | MC-03 | 378 | `iam_user_no_mfa` | IAM user does not have MFA enabled |
 | 6 | high | MC-07 | 336 | `cloudtrail_multi_region_enabled` | CloudTrail logging is disabled |
-| 7 | high | MC-01 | 245 | `s3_bucket_default_encryption` | S3 bucket without default encryption |
-| 8 | medium | - | 144 | `iam_root_hardware_mfa_enabled` | Root account does not have hardware MFA enabled |
-| 9 | medium | MC-08 | 84 | `s3_bucket_versioning_enabled` | S3 bucket versioning suspended |
+| 7 | high | MC-10 | 252 | `rds_instance_storage_encrypted` | RDS instance storage is not encrypted at rest |
+| 8 | high | MC-01 | 245 | `s3_bucket_default_encryption` | S3 bucket without default encryption |
+| 9 | medium | MC-09 | 168 | `s3_bucket_server_access_logging_enabled` | S3 bucket does not have access logging enabled |
+| 10 | medium | - | 144 | `iam_root_hardware_mfa_enabled` | Root account does not have hardware MFA enabled |
+| 11 | medium | MC-08 | 84 | `s3_bucket_versioning_enabled` | S3 bucket versioning suspended |
 
-## Current contents — misconfig_catalogue table
+## Current contents — misconfig_catalogue table (10 tracked findings)
 
 | ID | Title | ISO 27001 control | Remediation type | Status |
 |---|---|---|---|---|
@@ -68,8 +70,10 @@ CREATE INDEX IF NOT EXISTS idx_findings_status ON findings(status);
 | MC-06 | Publicly accessible RDS instance | A.8.20 | human_approval | pending |
 | MC-07 | CloudTrail logging disabled | A.8.15 | human_approval | pending |
 | MC-08 | S3 bucket versioning suspended | A.8.13 | auto | remediated |
+| MC-09 | S3 bucket missing access logging | A.8.15 | auto | pending |
+| MC-10 | RDS instance storage not encrypted at rest | A.8.24 | human_approval | remediated |
 
-*Note: the table above reflects `data/sample_findings.csv`, a 10-row demonstration dataset shape-matched to a real Prowler export. Re-running `build_db.py` against the real 192-finding scan output reproduces this same ranking at full scale — see `pipeline/README.md`.*
+*Note: the table above reflects `data/sample_findings.csv`, a 12-row demonstration dataset shape-matched to a real Prowler export, covering all 10 tracked misconfigs plus 2 extra rows (1 PASS, 1 untracked FAIL for realism). Re-running `build_db.py` against the real 192-finding scan output reproduces this same ranking at full scale — see `pipeline/README.md`. MC-09 is intentionally shown as `pending` — it's reserved for the live demo recording rather than pre-remediated.*
 
 ## Build script (`build_db.py`)
 

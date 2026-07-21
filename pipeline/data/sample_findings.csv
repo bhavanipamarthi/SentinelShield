@@ -9,3 +9,5 @@ F007,cloudtrail_multi_region_enabled,us-east-1,CloudGuardian-trail,AwsCloudTrail
 F008,s3_bucket_versioning_enabled,us-east-1,cloudguardian-data-633867805885,AwsS3Bucket,medium,FAIL,MC-08,S3 bucket versioning suspended
 F009,s3_bucket_level_public_access_block,us-east-1,cloudguardian-cloudtrail-633867805885,AwsS3Bucket,low,PASS,,S3 bucket public access block enabled
 F010,iam_root_hardware_mfa_enabled,us-east-1,root,AwsIamUser,medium,FAIL,,Root account does not have hardware MFA enabled
+F011,s3_bucket_server_access_logging_enabled,us-east-1,cloudguardian-data-633867805885,AwsS3Bucket,medium,FAIL,MC-09,S3 bucket does not have access logging enabled
+F012,rds_instance_storage_encrypted,us-east-1,cloudguardian-db,AwsRdsDbInstance,high,FAIL,MC-10,RDS instance storage is not encrypted at rest

@@ -115,10 +115,40 @@ Generate remediation guidance per the system prompt structure above.
 - **Verification**: `aws s3api get-bucket-versioning` returns
   `Status: Enabled`.
 
+### MC-09 — S3 bucket missing access logging
+- **Risk classification**: `AUTO_SAFE` — enabling access logging is
+  additive and has no effect on existing objects, permissions, or
+  availability. Reserved as the live demo finding — kept vulnerable on
+  its own Terraform toggle (`enable_access_logging`) so it can be
+  remediated on camera rather than shown as a static "already compliant"
+  log.
+- **Remediation**: `aws s3api put-bucket-logging` targeting the dedicated
+  `cloudguardian-access-logs-*` bucket; implemented by
+  `remediate_s3_access_logging.py`.
+- **Verification**: `aws s3api get-bucket-logging` returns a
+  `LoggingEnabled` block; Prowler re-scan shows PASS on
+  `s3_bucket_server_access_logging_enabled`.
+
+### MC-10 — RDS instance storage not encrypted at rest
+- **Root cause**: instance was created without `storage_encrypted = true`.
+- **Risk classification**: `HUMAN_APPROVAL_REQUIRED` — unlike the other
+  auto-safe findings, this genuinely cannot be flipped in place. AWS
+  requires snapshotting the instance, creating an encrypted copy of the
+  snapshot, and restoring a new instance from it — which means a new
+  endpoint, a maintenance window, and connection-string updates
+  downstream. Classified human-approval on technical grounds, not just
+  caution.
+- **Remediation**: snapshot `cloudguardian-db` -> copy snapshot with
+  `--kms-key-id` set -> restore as a new encrypted instance -> cut over
+  connections -> decommission the old instance.
+- **Verification**: `aws rds describe-db-instances` on the new instance
+  shows `StorageEncrypted: true`.
+
 ## Notes on the AUTO_SAFE / HUMAN_APPROVAL split
 
-3 of 8 findings (MC-01, MC-04, MC-08) were classified `AUTO_SAFE` and wired
-to the safe-remediation Lambdas. The remaining 5 involve identity, network
-access, or cost/availability trade-offs and were routed to the
-human-approval queue — consistent with what's logged in CloudWatch for the
-approval-gate Lambda.
+4 of 10 findings (MC-01, MC-04, MC-08, MC-09) were classified `AUTO_SAFE`
+and wired to the safe-remediation Lambdas. The remaining 6 involve
+identity, network access, or genuine operational constraints (like MC-10's
+snapshot/restore requirement) and were routed to the human-approval
+queue — consistent with what's logged in CloudWatch for the approval-gate
+Lambda.

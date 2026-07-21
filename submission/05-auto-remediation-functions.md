@@ -1,6 +1,8 @@
 # SentinelShield — auto-remediation functions with guardrails
 
-Three Lambda functions: two AUTO_SAFE remediators (S3 public access, S3 encryption/versioning) confirmed working via CloudWatch logs ("already compliant" on re-run), and one approval-gate function that routes the 5 higher-risk findings (MC-02, MC-03, MC-05, MC-06, MC-07) to human review instead of auto-remediating. All three log full context to CloudWatch as the authoritative evidence trail.
+Four Lambda functions: three AUTO_SAFE remediators (S3 public access, S3 encryption/versioning, S3 access logging) and one approval-gate function that routes the 6 higher-risk findings to human review instead of auto-remediating. All four log full context to CloudWatch as the authoritative evidence trail.
+
+**`remediate_s3_access_logging.py` is the live-demo Lambda** — MC-09 is deliberately kept un-remediated (see `terraform/s3-logging.tf`, `var.enable_access_logging`) so this function can be triggered on camera and show a real Prowler FAIL -> Lambda run -> Prowler PASS state change, rather than a pre-recorded "already compliant" log.
 
 **Note:** `approval_gate.py` references a placeholder SNS topic ARN — update `APPROVAL_TOPIC_ARN` with your real topic before deploying. Email delivery via SNS was unreliable in testing; CloudWatch Logs was used as the verification evidence instead.
 
@@ -175,6 +177,90 @@ def lambda_handler(event, context):
 
 ```
 
+## `remediate_s3_access_logging.py`
+
+```python
+"""
+remediate_s3_access_logging.py
+
+AUTO_SAFE remediation for MC-09 (S3 bucket missing access logging).
+
+This is the finding reserved for the live demo recording — it's kept
+deliberately un-remediated (see terraform/s3-logging.tf,
+var.enable_access_logging) so this Lambda can be triggered on camera and
+show a real before/after: Prowler FAIL -> this Lambda runs -> Prowler
+re-scan PASS, with a CloudWatch log showing the actual state change
+rather than "already compliant".
+
+Guardrails:
+- Idempotent: checks current logging config before writing; a bucket
+  that's already logging is a no-op.
+- Additive only: turning on logging never touches existing objects or
+  bucket policy beyond what's needed for log delivery.
+- Scoped: only touches the specific bucket passed in the event payload.
+"""
+
+import logging
+
+import boto3
+from botocore.exceptions import ClientError
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+s3 = boto3.client("s3")
+
+
+def lambda_handler(event, context):
+    bucket_name = event["bucket_name"]
+    target_bucket = event["target_bucket"]
+    target_prefix = event.get("target_prefix", f"{bucket_name}-access-logs/")
+    finding_id = event.get("finding_id", "unknown")
+
+    logger.info(f"Processing finding {finding_id} for bucket {bucket_name}")
+
+    try:
+        current = s3.get_bucket_logging(Bucket=bucket_name)
+    except ClientError as e:
+        logger.error(f"Could not read logging config for {bucket_name}: {e}")
+        raise
+
+    if "LoggingEnabled" in current:
+        logger.info(f"Bucket {bucket_name} already has access logging enabled. No action taken.")
+        return {
+            "statusCode": 200,
+            "bucket": bucket_name,
+            "finding_id": finding_id,
+            "action": "none",
+            "reason": "already_compliant",
+            "current_target": current["LoggingEnabled"].get("TargetBucket"),
+        }
+
+    s3.put_bucket_logging(
+        Bucket=bucket_name,
+        BucketLoggingStatus={
+            "LoggingEnabled": {
+                "TargetBucket": target_bucket,
+                "TargetPrefix": target_prefix,
+            }
+        },
+    )
+
+    logger.info(
+        f"Enabled access logging on {bucket_name} -> {target_bucket}/{target_prefix}"
+    )
+
+    return {
+        "statusCode": 200,
+        "bucket": bucket_name,
+        "finding_id": finding_id,
+        "action": "remediated",
+        "target_bucket": target_bucket,
+        "target_prefix": target_prefix,
+    }
+
+```
+
 ## `approval_gate.py`
 
 ```python
@@ -210,7 +296,7 @@ sns = boto3.client("sns")
 
 APPROVAL_TOPIC_ARN = "arn:aws:sns:us-east-1:633867805885:cloudguardian-approval-queue"
 
-HIGH_RISK_MISCONFIGS = {"MC-02", "MC-03", "MC-05", "MC-06", "MC-07"}
+HIGH_RISK_MISCONFIGS = {"MC-02", "MC-03", "MC-05", "MC-06", "MC-07", "MC-10"}
 
 
 def lambda_handler(event, context):

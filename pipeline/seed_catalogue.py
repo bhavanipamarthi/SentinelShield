@@ -14,6 +14,8 @@ CATALOGUE = [
     ("MC-06", "Publicly accessible RDS instance", "AwsRdsDbInstance", "A.8.20", "human_approval", "pending"),
     ("MC-07", "CloudTrail logging disabled", "AwsCloudTrailTrail", "A.8.15", "human_approval", "pending"),
     ("MC-08", "S3 bucket versioning suspended", "AwsS3Bucket", "A.8.13", "auto", "remediated"),
+    ("MC-09", "S3 bucket missing access logging", "AwsS3Bucket", "A.8.15", "auto", "pending"),
+    ("MC-10", "RDS instance storage not encrypted at rest", "AwsRdsDbInstance", "A.8.24", "human_approval", "remediated"),
 ]
 
 def main():
