@@ -1,3 +1,46 @@
+# --- MC-09: access logging disabled on legacy bucket --------------------
+# This finding has an independent toggle (var.enable_access_logging) so it
+# can be flipped independently of the main misconfiguration toggle for the
+# live demo.
+resource "aws_s3_bucket_logging" "legacy" {
+  count = var.enable_access_logging ? 1 : 0
+  bucket = aws_s3_bucket.legacy.id
+
+  target_bucket = aws_s3_bucket.logs.id
+  target_prefix = "log/"
+}
+
+# Logs bucket for MC-09
+resource "aws_s3_bucket" "logs" {
+  bucket = "cloudguardian-logs-${var.aws_account_id}"
+  tags   = { Project = "CloudGuardian", Finding = "MC-09" }
+}
+
+resource "aws_s3_bucket_public_access_block" "logs" {
+  bucket                  = aws_s3_bucket.logs.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_versioning" "logs" {
+  bucket = aws_s3_bucket.logs.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "logs" {
+  bucket = aws_s3_bucket.logs.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
 # --- MC-01: unencrypted legacy bucket -----------------------------------
 resource "aws_s3_bucket" "legacy" {
   bucket = "cloudguardian-legacy-${var.aws_account_id}"
