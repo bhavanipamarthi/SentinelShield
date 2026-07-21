@@ -51,3 +51,8 @@ variable "enable_access_logging" {
   type        = bool
   default     = false
 }
+variable "enable_access_logging" {
+  description = "Enable access logging on the legacy bucket (MC-09). Default: false (vulnerable)."
+  type        = bool
+  default     = false
+}
