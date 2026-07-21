@@ -23,10 +23,16 @@ Powered Cybersecurity (Cohort 1).
    functions; higher-risk findings are routed to a human-approval queue
    with full context logged to CloudWatch.
 
+<<<<<<< HEAD
 10 misconfigurations are tracked end-to-end through this pipeline (see
 `submission/02-misconfiguration-catalogue.md`), spanning S3, IAM, network,
 RDS, and CloudTrail. One (MC-09) is deliberately kept un-remediated,
 reserved for a live before/after in the demo recording.
+=======
+8 misconfigurations are tracked end-to-end through this pipeline (see
+`submission/02-misconfiguration-catalogue.md`), spanning S3, IAM, network,
+RDS, and CloudTrail.
+>>>>>>> 70cf7bcb92709f5d6e8e474cf240f50839bfca4f
 
 ## Repo structure
 
@@ -94,11 +100,11 @@ Rule 6) — see `submission/06-compliance-crosswalk.md`.
 
 ## Auto-remediation vs. human approval
 
+
 | Type | Findings | Rationale |
 |---|---|---|
 | Auto-remediated | MC-01, MC-04, MC-08, MC-09 | Reversible, additive changes with no availability impact. MC-09 is triggered live in the demo rather than pre-remediated |
 | Human approval required | MC-02, MC-03, MC-05, MC-06, MC-07, MC-10 | Touch access control, network exposure, or have genuine operational constraints (MC-10 needs a snapshot/restore cycle) |
-
 ## License
 
 See [LICENSE](LICENSE).
